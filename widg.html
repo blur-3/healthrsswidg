@@ -51,8 +51,10 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const text = await response.text();
-                return text;
+                 const data = await response.json();
+                // Decode the base64 content
+                const xmlContent = atob(data.contents.split(',')[1]); // Get the part after the comma
+                return xmlContent; // Return the XML content
             } catch (error) {
                 console.error('Fetch error:', error);
                 return null; // Handle fetch errors gracefully
