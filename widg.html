@@ -55,30 +55,36 @@
                 console.error('Fetch error:', error);
                 return null; // Handle fetch errors gracefully
             }
-}
+        }
 
         async function fetchAllRss() {
-            const promises = rssUrls.map(url => fetchRss(url));
-            const results = await Promise.all(promises);
-            const allItems = [];
-
-            results.forEach((text) => {
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(text, "application/xml");
-                const items = xmlDoc.getElementsByTagName('item');
-
-                for (let i = 0; i < items.length; i++) {
-                    const title = items[i].getElementsByTagName('title')[0].textContent;
-                    const description = items[i].getElementsByTagName('description')[0].textContent;
-                    const link = items[i].getElementsByTagName('link')[0].textContent;
-                    const pubDate = new Date(items[i].getElementsByTagName('pubDate')[0].textContent);
-                    allItems.push({ title, description, link, pubDate });
-                }
-            });
-
+            try {
+                const promises = rssUrls.map(url => fetchRss(url));
+                const results = await Promise.all(promises);
+                console.log('Fetched results:', results); // Log the fetched results
+                const allItems = [];
+                
+                results.forEach(text => {
+                    if (!text) return; // Skip null results
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(text, "application/xml");
+                    const items = xmlDoc.getElementsByTagName('item');
+                    
+                    for (let i = 0; i < items.length; i++) {
+                        const title = items[i].getElementsByTagName('title')[0].textContent;
+                        const description = items[i].getElementsByTagName('description')[0].textContent;
+                        const link = items[i].getElementsByTagName('link')[0].textContent;
+                        const pubDate = new Date(items[i].getElementsByTagName('pubDate')[0].textContent);
+                        allItems.push({ title, description, link, pubDate });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching all RSS feeds:', error);
+            }
             allItems.sort((a, b) => b.pubDate - a.pubDate);
             displayRssItems(allItems);
         }
+        
 
         function displayRssItems(items) {
             let htmlContent = '';
