@@ -46,9 +46,16 @@
         ];
 
         async function fetchRss(url) {
-            const response = await fetch(`/rss?url=${encodeURIComponent(url)}`);
-            return await response.text();
-        }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const text = await response.text();
+                return text;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null; // Handle fetch errors gracefully
+            }
+}
 
         async function fetchAllRss() {
             const promises = rssUrls.map(url => fetchRss(url));
