@@ -39,7 +39,7 @@
     <h2>RSS Feed</h2>
     <div id="rssContent">Loading...</div>
     <script>
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const proxyUrl = 'https://api.allorigins.win/get?url=';
         const rssUrls = [
             `${proxyUrl}https://www.blogilates.com/feed/`,
             `${proxyUrl}https://wildwoodhealth.com/feed/`
@@ -58,11 +58,12 @@
         }
         
         async function fetchAllRss() {
+            const allItems = [];
             try {
                 const promises = rssUrls.map(url => fetchRss(url));
                 const results = await Promise.all(promises);
                 console.log('Fetched results:', results); // Log the fetched results
-                const allItems = [];
+                
                 
                 results.forEach(text => {
                     if (!text) return; // Skip null results
