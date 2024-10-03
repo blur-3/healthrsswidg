@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS Reader Widget</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Adjust to make responsive */ 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-width: 300px; /* Set a max width for the widget */
+        }
+        .item {
+            background: #fff;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .item h3 {
+            margin: 0 0 10px;
+        }
+        .item a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .item a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>RSS Feed</h2>
+    <div id="rssContent">Loading...</div>
+    <script>
+        const rssUrls = [
+            'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+            'https://feeds.bbci.co.uk/news/rss.xml',
+            'https://www.theguardian.com/international/rss'
+        ];
+
+        async function fetchRss(url) {
+            const response = await fetch(`/rss?url=${encodeURIComponent(url)}`);
+            return await response.text();
+        }
+
+        async function fetchAllRss() {
+            const promises = rssUrls.map(url => fetchRss(url));
+            const results = await Promise.all(promises);
+            const allItems = [];
+
+            results.forEach((text) => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "application/xml");
+                const items = xmlDoc.getElementsByTagName('item');
+
+                for (let i = 0; i < items.length; i++) {
+                    const title = items[i].getElementsByTagName('title')[0].textContent;
+                    const description = items[i].getElementsByTagName('description')[0].textContent;
+                    const link = items[i].getElementsByTagName('link')[0].textContent;
+                    const pubDate = new Date(items[i].getElementsByTagName('pubDate')[0].textContent);
+                    allItems.push({ title, description, link, pubDate });
+                }
+            });
+
+            allItems.sort((a, b) => b.pubDate - a.pubDate);
+            displayRssItems(allItems);
+        }
+
+        function displayRssItems(items) {
+            let htmlContent = '';
+            items.forEach(item => {
+                htmlContent += `
+                    <div class="item">
+                        <h3><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                        <p>${item.description}</p>
+                        <small>Published on: ${item.pubDate.toLocaleString()}</small>
+                    </div>
+                `;
+            });
+            document.getElementById('rssContent').innerHTML = htmlContent;
+        }
+
+        window.onload = fetchAllRss;
+    </script>
+</body>
+</html>
+
